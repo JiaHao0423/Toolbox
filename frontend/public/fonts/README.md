@@ -12,8 +12,10 @@ npm run setup:pdf-font
 
 ## Docker / Zeabur 建置
 
-建置時若找不到本機 TTF，會自動下載 **Noto Sans TC Regular** 並存成 `SimHei.ttf`。
+建置時優先從系統字型 **wqy-microhei.ttc** 用 `fonttools` 提取成 TTF（不需外網下載）。
 
-注意：不可使用 `.ttc` 字型集合檔改名為 `.ttf`，jsPDF 會報 `No unicode cmap for font`。
+若提取失敗，才會嘗試從 GitHub 下載 Noto Sans TC。
+
+注意：不可把 `.ttc` 直接改名為 `.ttf`，jsPDF 會報 `No unicode cmap for font`。
 
 此檔案較大，未納入 Git。
