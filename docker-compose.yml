@@ -1,0 +1,90 @@
+# 本機全棧（多容器）：docker compose up -d --build
+# Zeabur 雲端：使用根目錄 Dockerfile（單一容器，前後端一起），不支援此 compose 檔
+
+name: toolbox
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: toolbox-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-0000}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-toolbox}
+      TZ: Asia/Taipei
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${MYSQL_PORT:-3308}:3306"
+    volumes:
+      - toolbox-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: toolbox-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - toolbox-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:v1.24
+    container_name: toolbox-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+      TZ: Asia/Taipei
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: toolbox-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-0000}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-toolbox}
+      TZ: Asia/Taipei
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: toolbox-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+
+volumes:
+  toolbox-mysql-data:
+  toolbox-redis-data:

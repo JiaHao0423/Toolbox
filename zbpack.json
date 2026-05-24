@@ -1,0 +1,7 @@
+{
+  "plan_type": "docker",
+  "ignore_dockerfile": false,
+  "dockerfile": {
+    "path": "Dockerfile"
+  }
+}

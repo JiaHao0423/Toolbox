@@ -1,0 +1,9 @@
+# 根目錄 compose 建置時忽略
+.git/
+.idea/
+**/.idea/
+**/node_modules/
+**/target/
+**/dist/
+**/*.iml
+.env

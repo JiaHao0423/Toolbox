@@ -1,0 +1,40 @@
+# --- 環境與機密 ---
+.env
+.env.local
+*.local
+
+# --- Java / Maven ---
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/**/src/**/target/
+
+# --- Node / Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# PDF 字型（請在 frontend 執行 npm run setup:pdf-font）
+frontend/public/fonts/SimHei.ttf
+frontend/public/fonts/KaiU.ttf
+frontend/public/fonts/NotoSansTC-Regular.ttf
+
+# --- IDE（保留根目錄共用設定，忽略本機狀態）---
+backend/.idea/
+frontend/.idea/
+.idea/workspace.xml
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/httpRequests/
+.idea/shelf/
+*.iws
+.vscode/
+!.vscode/extensions.json
+
+# --- 建置輸出 ---
+out/
+
+# --- 系統與日誌 ---
+.DS_Store
+Thumbs.db
+*.log
+logs/
