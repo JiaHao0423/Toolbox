@@ -38,6 +38,15 @@ export async function loadPdfChineseFontBase64(): Promise<string> {
   }
 
   const buffer = await response.arrayBuffer()
+  if (buffer.byteLength < 1024) {
+    throw new Error(`PDF 字型檔案過小（/fonts/${FONT_FILE}），請重新建置前端`)
+  }
+
+  const header = new Uint8Array(buffer, 0, 4)
+  if (header[0] !== 0x00 || header[1] !== 0x01) {
+    throw new Error(`PDF 字型格式無效（/fonts/${FONT_FILE}），需要有效的 TTF`)
+  }
+
   cachedBase64 = await arrayBufferToBase64(buffer)
   return cachedBase64
 }
