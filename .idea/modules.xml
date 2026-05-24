@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/pom.xml" filepath="$PROJECT_DIR$/pom.xml" />
-      <module fileurl="file://$PROJECT_DIR$/backend/pom.xml" filepath="$PROJECT_DIR$/backend/pom.xml" />
       <module fileurl="file://$PROJECT_DIR$/frontend/frontend.iml" filepath="$PROJECT_DIR$/frontend/frontend.iml" />
     </modules>
   </component>

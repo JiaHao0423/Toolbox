@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="BackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-    <module name="backend" />
+    <module name="backend.main" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.ben.com.backend.BackendApplication" />
     <method v="2">
       <option name="Make" enabled="true" />
