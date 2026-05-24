@@ -4,7 +4,7 @@ FROM node:22-bookworm-slim AS build
 WORKDIR /app
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates fonts-wqy-microhei python3-fonttools \
+  && apt-get install -y --no-install-recommends ca-certificates findutils fonts-noto-extra fonts-wqy-microhei python3-fonttools \
   && rm -rf /var/lib/apt/lists/*
 
 COPY frontend/package.json frontend/package-lock.json ./
