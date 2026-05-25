@@ -1,3 +1,4 @@
+import { extractResidentialOrShopAddress } from './convertUnitCode'
 import { isCustodyHeaderLine } from './parseMailPackage'
 
 export type CustodyRow = {
@@ -161,13 +162,40 @@ function extractAddressFromDepositor(text: string): string {
   return ''
 }
 
+/** 收件戶別：優先寄放人戶別；僅管理室／無戶別時改採領取人地址 */
+export function resolveCustodyUnitAddress(row: CustodyRow): string {
+  const depositorUnit = extractResidentialOrShopAddress(row.depositor)
+  const pickupUnit = extractResidentialOrShopAddress(row.pickup)
+
+  if (depositorUnit) {
+    return depositorUnit
+  }
+
+  if (pickupUnit) {
+    return pickupUnit
+  }
+
+  const depositorTrimmed = row.depositor.trim()
+  if (depositorTrimmed === '管理室' || depositorTrimmed.includes('管理室')) {
+    return '管理室'
+  }
+
+  return ''
+}
+
 export function resolveCustodyRecipient(row: CustodyRow): string {
+  const depositorUnit = extractResidentialOrShopAddress(row.depositor)
+  const pickupNames = extractAllBracketNames(row.pickup)
   const depositorNames = extractAllBracketNames(row.depositor)
+
+  if (!depositorUnit && pickupNames.length > 0) {
+    return pickupNames[0] ?? ''
+  }
+
   if (depositorNames.length > 0) {
     return depositorNames[0] ?? ''
   }
 
-  const pickupNames = extractAllBracketNames(row.pickup)
   if (pickupNames.length > 0) {
     return pickupNames[0] ?? ''
   }

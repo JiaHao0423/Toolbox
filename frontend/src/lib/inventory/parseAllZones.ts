@@ -1,6 +1,6 @@
 import { classifyBuildingFromAddress, classifyBuildingFromText } from './classifyBuilding'
 import { cleanMailLocation } from './cleanLocation'
-import { convertUnitCode, extractAddressFromText } from './convertUnitCode'
+import { convertUnitCode } from './convertUnitCode'
 import {
   extractCashAmount,
   extractNonCashCategory,
@@ -8,6 +8,7 @@ import {
   isNonCashCustodyType,
   parseCustody,
   resolveCustodyRecipient,
+  resolveCustodyUnitAddress,
 } from './parseCustody'
 import { parseMailPackage } from './parseMailPackage'
 import { sortRowsBySerialNo } from './sortRows'
@@ -27,8 +28,7 @@ function mapMailPackageRow(row: ReturnType<typeof parseMailPackage>[number]): Ou
 }
 
 function mapCustodyRow(row: ReturnType<typeof parseCustody>[number]): OutputRow {
-  const addressSource =
-    extractAddressFromText(row.depositor) || extractAddressFromText(row.pickup)
+  const addressSource = resolveCustodyUnitAddress(row)
   const unit = convertUnitCode(addressSource)
 
   return {

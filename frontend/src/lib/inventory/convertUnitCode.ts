@@ -28,11 +28,16 @@ export function convertUnitCode(address: string): { code: string; converted: boo
   return { code: trimmed, converted: false }
 }
 
-export function extractAddressFromText(text: string): string {
+/** 僅擷取 8號／10號／店面地址，不含管理室 */
+export function extractResidentialOrShopAddress(text: string): string {
   const lines = text.split('\n').map((line) => line.trim())
   for (const line of lines) {
-    if (RESIDENTIAL_PATTERN.test(line) || SHOP_PATTERN.test(line) || line === '管理室') {
-      return line
+    if (RESIDENTIAL_PATTERN.test(line)) {
+      return line.match(/^(?:8|10)號\d+樓之\d+/)?.[0] ?? line
+    }
+
+    if (SHOP_PATTERN.test(line)) {
+      return line.match(/\(店\d+\)[^\t\n]*/)?.[0] ?? line
     }
   }
 
@@ -44,6 +49,26 @@ export function extractAddressFromText(text: string): string {
   const inlineShop = text.match(/\(店\d+\)[^\t\n]*/)
   if (inlineShop) {
     return inlineShop[0]
+  }
+
+  return ''
+}
+
+export function extractAddressFromText(text: string): string {
+  const unitAddress = extractResidentialOrShopAddress(text)
+  if (unitAddress) {
+    return unitAddress
+  }
+
+  const lines = text.split('\n').map((line) => line.trim())
+  for (const line of lines) {
+    if (line === '管理室') {
+      return line
+    }
+  }
+
+  if (text.includes('管理室')) {
+    return '管理室'
   }
 
   return ''
