@@ -76,9 +76,31 @@
   }
 }
 
+.inventory-page__section-title {
+  grid-column: 1 / -1;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
 .inventory-page__zones {
   display: grid;
   gap: 1rem;
+}
+
+.inventory-page__zones--inputs {
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.inventory-page__zone-hint {
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.inventory-page__empty--standalone {
+  margin-top: 0;
 }
 
 .inventory-page__zone {

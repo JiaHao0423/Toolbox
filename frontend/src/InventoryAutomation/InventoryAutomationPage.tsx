@@ -3,43 +3,42 @@ import { FileDown, RotateCcw, Sparkles } from 'lucide-react'
 import { ToolPageShell } from '../components/layout/AppShell'
 import { buildPdfFilename, exportInventoryPdf } from '../lib/inventory/exportInventoryPdf'
 import { hasExportableData, parseAllZones } from '../lib/inventory/parseAllZones'
-import { OUTPUT_HEADERS } from '../lib/inventory/types'
-import type { ZoneId, ZoneInputs } from '../lib/inventory/types'
-import { INVENTORY_ZONES, createEmptyZoneInputs } from '../lib/inventory/zones'
+import { getSectionHeaders, rowToDisplayCells } from '../lib/inventory/types'
+import type { InputZoneId, InputZoneInputs } from '../lib/inventory/types'
+import { INPUT_ZONES, OUTPUT_ZONES, createEmptyInputZoneInputs } from '../lib/inventory/zones'
 import './InventoryAutomationPage.scss'
 
 const workflowSteps = [
   { step: '1', title: '分類複製', detail: '在智生活依類別複製表格' },
-  { step: '2', title: '分區貼上', detail: '貼入對應區塊並解析整理' },
-  { step: '3', title: '匯出 PDF', detail: '確認預覽後下載盤點表' },
+  { step: '2', title: '貼上資料', detail: '貼入四大類區塊，包裹與現金自動分棟' },
+  { step: '3', title: '匯出 PDF', detail: '確認預覽後下載盤點表（直向 A4）' },
 ]
 
 export default function InventoryAutomationPage() {
-  const [zoneInputs, setZoneInputs] = useState<ZoneInputs>(createEmptyZoneInputs)
+  const [inputZones, setInputZones] = useState<InputZoneInputs>(createEmptyInputZoneInputs)
   const [reportTitle, setReportTitle] = useState('盤點表')
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape')
   const [parsed, setParsed] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [exportPhase, setExportPhase] = useState<'idle' | 'font' | 'pdf'>('idle')
 
   const parseResult = useMemo(
-    () => (parsed ? parseAllZones(zoneInputs) : { sections: [], warnings: [] }),
-    [zoneInputs, parsed],
+    () => (parsed ? parseAllZones(inputZones) : { sections: [], warnings: [] }),
+    [inputZones, parsed],
   )
   const canExport = parsed && parseResult.sections.length > 0
 
-  const updateZone = (zoneId: ZoneId, value: string) => {
-    setZoneInputs((current) => ({ ...current, [zoneId]: value }))
+  const updateInputZone = (zoneId: InputZoneId, value: string) => {
+    setInputZones((current) => ({ ...current, [zoneId]: value }))
     setParsed(false)
   }
 
-  const clearZone = (zoneId: ZoneId) => {
-    updateZone(zoneId, '')
+  const clearInputZone = (zoneId: InputZoneId) => {
+    updateInputZone(zoneId, '')
   }
 
   const clearAll = () => {
-    setZoneInputs(createEmptyZoneInputs())
+    setInputZones(createEmptyInputZoneInputs())
     setParsed(false)
   }
 
@@ -64,7 +63,6 @@ export default function InventoryAutomationPage() {
       setExportPhase('pdf')
       await exportInventoryPdf(parseResult.sections, {
         title: reportTitle,
-        orientation,
         filename: buildPdfFilename(reportTitle),
       })
     } catch (error) {
@@ -83,7 +81,7 @@ export default function InventoryAutomationPage() {
   return (
     <ToolPageShell
       title="盤點表自動化工具"
-      description="依類別分區貼上智生活資料，自動整理戶別代號並匯出 PDF。空區塊不會出現在輸出結果中。"
+      description="依類別貼上智生活資料，包裹與現金會依地址自動分至 A棟／B棟／店面，整理戶別代號並匯出直向 PDF。空區塊不會出現在輸出結果中。"
     >
       <div className="inventory-page">
         <section className="inventory-page__intro">
@@ -98,42 +96,27 @@ export default function InventoryAutomationPage() {
 
         <section className="inventory-page__settings">
           <h2 className="mb-4 text-lg font-medium">匯出設定</h2>
-          <div className="inventory-page__settings-grid">
-            <label className="inventory-page__field">
-              <span className="inventory-page__field-label">報表標題</span>
-              <input
-                className="inventory-page__input"
-                value={reportTitle}
-                onChange={(event) => setReportTitle(event.target.value)}
-              />
-            </label>
-            <label className="inventory-page__field">
-              <span className="inventory-page__field-label">PDF 方向</span>
-              <select
-                className="inventory-page__select"
-                value={orientation}
-                onChange={(event) =>
-                  setOrientation(event.target.value as 'portrait' | 'landscape')
-                }
-              >
-                <option value="landscape">橫向（建議）</option>
-                <option value="portrait">直向</option>
-              </select>
-            </label>
-          </div>
+          <label className="inventory-page__field">
+            <span className="inventory-page__field-label">報表標題</span>
+            <input
+              className="inventory-page__input"
+              value={reportTitle}
+              onChange={(event) => setReportTitle(event.target.value)}
+            />
+          </label>
         </section>
 
         <section className="inventory-page__actions">
           <div>
             <h2 className="font-medium">解析資料</h2>
-            <p className="text-sm text-muted-foreground">貼上各區資料後，按「全部解析」更新預覽</p>
+            <p className="text-sm text-muted-foreground">貼上各類資料後，按「全部解析」更新預覽</p>
           </div>
           <div className="inventory-page__button-row">
             <button
               type="button"
               className="inventory-page__btn inventory-page__btn--primary"
               onClick={handleParseAll}
-              disabled={!hasExportableData(zoneInputs)}
+              disabled={!hasExportableData(inputZones)}
             >
               <Sparkles className="h-4 w-4" />
               全部解析
@@ -157,89 +140,120 @@ export default function InventoryAutomationPage() {
           </section>
         )}
 
-        <section className="inventory-page__zones">
-          {INVENTORY_ZONES.map((zone) => {
-            const section = parseResult.sections.find((item) => item.id === zone.id)
-            const rowCount = section?.rows.length ?? 0
-
-            return (
-              <article key={zone.id} className="inventory-page__zone">
-                <div className="inventory-page__zone-header">
-                  <div className="inventory-page__zone-title-wrap">
-                    <h3 className="inventory-page__zone-title">{zone.title}</h3>
-                    {parsed && rowCount > 0 && (
-                      <span className="inventory-page__zone-badge">{rowCount} 列</span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className="inventory-page__zone-clear"
-                    onClick={() => clearZone(zone.id)}
-                  >
-                    清除
-                  </button>
+        <section className="inventory-page__zones inventory-page__zones--inputs">
+          <h2 className="inventory-page__section-title">貼上資料</h2>
+          {INPUT_ZONES.map((zone) => (
+            <article key={zone.id} className="inventory-page__zone">
+              <div className="inventory-page__zone-header">
+                <div className="inventory-page__zone-title-wrap">
+                  <h3 className="inventory-page__zone-title">{zone.title}</h3>
                 </div>
+                <button
+                  type="button"
+                  className="inventory-page__zone-clear"
+                  onClick={() => clearInputZone(zone.id)}
+                >
+                  清除
+                </button>
+              </div>
 
-                <div className="inventory-page__zone-body">
-                  <textarea
-                    className="inventory-page__textarea"
-                    value={zoneInputs[zone.id]}
-                    placeholder={zone.placeholder}
-                    onChange={(event) => updateZone(zone.id, event.target.value)}
-                  />
+              <div className="inventory-page__zone-body">
+                {zone.hint && <p className="inventory-page__zone-hint">{zone.hint}</p>}
+                <textarea
+                  className="inventory-page__textarea"
+                  value={inputZones[zone.id]}
+                  placeholder={zone.placeholder}
+                  onChange={(event) => updateInputZone(zone.id, event.target.value)}
+                />
+              </div>
+            </article>
+          ))}
+        </section>
 
-                  {parsed && rowCount > 0 && section && (
+        {parsed && (
+          <section className="inventory-page__zones inventory-page__zones--preview">
+            <h2 className="inventory-page__section-title">輸出預覽</h2>
+            {parseResult.sections.length === 0 ? (
+              <div className="inventory-page__empty inventory-page__empty--standalone">
+                沒有可輸出的資料，請確認貼上格式後重新解析
+              </div>
+            ) : (
+              parseResult.sections.map((section) => (
+                <article key={section.id} className="inventory-page__zone">
+                  <div className="inventory-page__zone-header">
+                    <div className="inventory-page__zone-title-wrap">
+                      <h3 className="inventory-page__zone-title">{section.title}</h3>
+                      <span className="inventory-page__zone-badge">{section.rows.length} 列</span>
+                    </div>
+                  </div>
+
+                  <div className="inventory-page__zone-body">
                     <div className="inventory-page__preview">
                       <table className="inventory-page__table">
                         <thead>
                           <tr>
-                            {OUTPUT_HEADERS.map((header) => (
+                            {getSectionHeaders(section.id).map((header) => (
                               <th key={header}>{header}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {section.rows.map((row, index) => (
-                            <tr key={`${row.serialNo}-${index}`}>
-                              <td>□</td>
-                              <td>{row.serialNo}</td>
-                              <td
-                                className={
-                                  row.unitCode && !row.unitCodeConverted
-                                    ? 'inventory-page__unit--warn'
-                                    : undefined
-                                }
-                              >
-                                {row.unitCode}
-                              </td>
-                              <td>{row.recipient}</td>
-                              <td>{row.registeredAt}</td>
-                              <td>{row.location}</td>
-                            </tr>
-                          ))}
+                          {section.rows.map((row, index) => {
+                            const cells = rowToDisplayCells(section.id, row)
+                            return (
+                              <tr key={`${row.serialNo}-${index}`}>
+                                {cells.map((cell, cellIndex) => (
+                                  <td
+                                    key={`${row.serialNo}-${cellIndex}`}
+                                    className={
+                                      cellIndex === 2 &&
+                                      row.unitCode &&
+                                      !row.unitCodeConverted
+                                        ? 'inventory-page__unit--warn'
+                                        : undefined
+                                    }
+                                  >
+                                    {cellIndex === 0 ? '□' : cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>
-                  )}
+                  </div>
+                </article>
+              ))
+            )}
 
-                  {parsed && rowCount === 0 && zoneInputs[zone.id].trim() && (
-                    <div className="inventory-page__empty">無法解析資料，請確認貼上格式</div>
-                  )}
+            {OUTPUT_ZONES.filter(
+              (zone) => !parseResult.sections.some((section) => section.id === zone.id),
+            ).map((zone) => {
+              const hasInput =
+                (zone.id === 'mail' && inputZones.mail.trim()) ||
+                (zone.id.startsWith('pkg-') && inputZones.package.trim()) ||
+                (zone.id.startsWith('cash-') && inputZones.cash.trim()) ||
+                (zone.id === 'custody-other' && inputZones['non-cash'].trim())
 
-                  {parsed && !zoneInputs[zone.id].trim() && (
-                    <div className="inventory-page__empty">尚未貼上資料，匯出時將略過</div>
-                  )}
+              if (!hasInput) {
+                return null
+              }
+
+              return (
+                <div key={zone.id} className="inventory-page__empty inventory-page__empty--standalone">
+                  「{zone.title}」解析後無資料（可能地址無法分棟或類型不符）
                 </div>
-              </article>
-            )
-          })}
-        </section>
+              )
+            })}
+          </section>
+        )}
 
         <section className="inventory-page__export">
           <div>
             <h2 className="font-medium">輸出 PDF</h2>
             <p className="text-sm text-muted-foreground">
-              僅輸出有資料的區塊；匯出中請稍候，勿關閉頁面
+              僅輸出有資料的區塊；直向 A4；匯出中請稍候，勿關閉頁面
             </p>
             {exportError && <p className="inventory-page__export-error">{exportError}</p>}
           </div>

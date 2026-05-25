@@ -4,8 +4,27 @@ export type CustodyRow = {
   serialNo: string
   depositor: string
   pickup: string
+  custodyType: string
   registeredAt: string
   location: string
+}
+
+export function extractCashAmount(custodyType: string): string {
+  const match = custodyType.match(/^現金\(([^)]+)\)/)
+  return match?.[1]?.trim() ?? ''
+}
+
+export function extractNonCashCategory(custodyType: string): string {
+  const match = custodyType.match(/^非現金\(([^)]+)\)/)
+  return match?.[1]?.trim() ?? ''
+}
+
+export function isCashCustodyType(custodyType: string): boolean {
+  return custodyType.startsWith('現金(')
+}
+
+export function isNonCashCustodyType(custodyType: string): boolean {
+  return custodyType.startsWith('非現金(')
 }
 
 const TIME_PATTERN = /\d{4}\/\d{2}\/\d{2}\s+\d{1,2}:\d{2}/
@@ -76,6 +95,7 @@ export function parseCustodyRecord(record: string): CustodyRow {
   const depositorParts: string[] = []
   const pickupParts: string[] = []
   let foundType = false
+  let custodyType = ''
 
   for (const line of lines) {
     const cells = line.split('\t').map((cell) => cell.trim())
@@ -92,6 +112,7 @@ export function parseCustodyRecord(record: string): CustodyRow {
       }
 
       if (/^(現金|非現金)\(/.test(cell)) {
+        custodyType = cell
         foundType = true
         continue
       }
@@ -124,6 +145,7 @@ export function parseCustodyRecord(record: string): CustodyRow {
     serialNo,
     depositor: depositorText,
     pickup: pickupText,
+    custodyType,
     registeredAt,
     location,
   }

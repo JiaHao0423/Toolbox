@@ -1,16 +1,16 @@
 import type { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { OUTPUT_HEADERS } from './types'
-import type { OutputRow, PdfSection } from './types'
+import { getSectionHeaders, rowToDisplayCells } from './types'
+import type { PdfSection } from './types'
 import { loadPdfChineseFontBase64, PDF_FONT_FAMILY, registerPdfChineseFont } from './pdfFont'
 
 export type PdfExportOptions = {
   title: string
-  orientation: 'portrait' | 'landscape'
   filename?: string
 }
 
 const TABLE_FONT = PDF_FONT_FAMILY
+const PDF_ORIENTATION = 'portrait' as const
 
 export function formatExportDate() {
   return new Intl.DateTimeFormat('zh-TW', {
@@ -59,19 +59,17 @@ async function savePdfBlob(blob: Blob, filename: string): Promise<void> {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-function rowToTableCells(row: OutputRow): string[] {
-  return ['□', row.serialNo, row.unitCode, row.recipient, row.registeredAt, row.location]
-}
-
 function addSectionTable(doc: jsPDF, section: PdfSection, startY: number): number {
+  const headers = getSectionHeaders(section.id)
+
   doc.setFont(TABLE_FONT, 'normal')
   doc.setFontSize(11)
   doc.text(`【${section.title}】`, 14, startY)
 
   autoTable(doc, {
     startY: startY + 4,
-    head: [OUTPUT_HEADERS.slice()],
-    body: section.rows.map(rowToTableCells),
+    head: [headers.slice()],
+    body: section.rows.map((row) => rowToDisplayCells(section.id, row)),
     styles: {
       font: TABLE_FONT,
       fontStyle: 'normal',
@@ -97,7 +95,6 @@ function addSectionTable(doc: jsPDF, section: PdfSection, startY: number): numbe
       0: { cellWidth: 8, halign: 'center' },
       1: { cellWidth: 14 },
       2: { cellWidth: 22 },
-      4: { cellWidth: 28 },
     },
     margin: { left: 14, right: 14 },
   })
@@ -117,7 +114,7 @@ export async function exportInventoryPdf(
   const doc = new jsPDF({
     unit: 'mm',
     format: 'a4',
-    orientation: options.orientation,
+    orientation: PDF_ORIENTATION,
   })
 
   registerPdfChineseFont(doc, fontBase64)
