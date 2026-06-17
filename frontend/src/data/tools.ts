@@ -1,4 +1,4 @@
-import { ClipboardList, type LucideIcon } from 'lucide-react'
+import { Car, ClipboardList, type LucideIcon } from 'lucide-react'
 
 export type Tool = {
   id: string
@@ -16,6 +16,14 @@ export const tools: Tool[] = [
     description: '自動化處理庫存盤點流程，提升工作效率',
     icon: ClipboardList,
     href: '/tools/inventory-automation',
+    status: 'available',
+  },
+  {
+    id: 'parking-fee',
+    name: '停車費計算',
+    description: '依進離場時間自動計算停車費用',
+    icon: Car,
+    href: '/tools/parking-fee',
     status: 'available',
   },
 ]

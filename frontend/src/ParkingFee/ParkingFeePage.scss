@@ -1,0 +1,125 @@
+.parking-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.parking-page__rules {
+  display: grid;
+  gap: 0.75rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.parking-page__rule-card {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.parking-page__rule-label {
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.parking-page__rule-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.parking-page__calculator {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.parking-page__form {
+  display: grid;
+  gap: 1rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.parking-page__field {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.parking-page__field-label {
+  font-weight: 500;
+}
+
+.parking-page__input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--input);
+  border-radius: 0.5rem;
+  background: var(--background);
+  outline: none;
+
+  &:focus-visible {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+  }
+}
+
+.parking-page__result {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in oklch, var(--primary) 25%, var(--border));
+  border-radius: 0.75rem;
+  background: color-mix(in oklch, var(--primary) 6%, var(--card));
+}
+
+.parking-page__result-label {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.parking-page__result-fee {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.parking-page__result-detail {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.parking-page__result-note {
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklch, var(--primary) 10%, transparent);
+  font-size: 0.8125rem;
+  color: var(--foreground);
+}
+
+.parking-page__example {
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.parking-page__example-code {
+  font-family: ui-layout, ui-monospace, monospace;
+  color: var(--foreground);
+}
